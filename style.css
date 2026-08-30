@@ -1,0 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Poppins:wght@400;500;600&display=swap');
+
+:root {
+    --color-perla: #F9F9F9; /* Fondo muy sutil y limpio */
+    --color-naranja: #FF8000;
+    --color-grafito: #3C3C3C;
+    --color-white: #FFFFFF;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: var(--color-white); /* Fondo Blanco */
+    color: var(--color-grafito);
+}
+
+/* TIPOGRAFIA DE TITULOS (Fredoka) */
+h1, h2, h3, .logo, .category-title, .product-title, .section-title {
+    font-family: 'Fredoka', sans-serif;
+}
+
+/* HEADER */
+header {
+    background-color: var(--color-white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 50px;
+    border-bottom: 2px solid #EEEEEE;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--color-naranja);
+    text-decoration: none;
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--color-grafito);
+    margin: 0 15px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: color 0.3s;
+}
+
+nav a:hover, nav a.active {
+    color: var(--color-naranja);
+}
+
+/* BOTONERA FLOTANTE */
+.floating-buttons {
+    position: fixed;
+    right: 20px;
+    bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.float-btn {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background-color: var(--color-white);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 22px;
+    position: relative;
+    transition: transform 0.3s;
+    cursor: pointer;
+    border: 1px solid #EEEEEE;
+}
+
+.float-btn:hover {
+    transform: scale(1.1);
+}
+
+.float-btn.whatsapp { background-color: #25D366; color: white; border: none; }
+.float-btn.cart { background-color: var(--color-naranja); color: white; border: none; }
+.float-btn.ai { background-color: #FFB703; color: white; border: none; }
+
+.cart-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #D90429;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* VENTANA DE CHAT FLOTANTE */
+.chat-popup {
+    position: fixed;
+    right: 90px;
+    bottom: 30px;
+    width: 320px;
+    height: 420px;
+    background: var(--color-white);
+    border-radius: 15px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+    display: none;
+    flex-direction: column;
+    z-index: 1001;
+    overflow: hidden;
+    border: 1px solid #E0E0E0;
+}
+
+.chat-popup.active {
+    display: flex;
+}
+
+.chat-header {
+    background-color: var(--color-naranja);
+    color: white;
+    padding: 12px 15px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Fredoka', sans-serif;
+}
+
+.chat-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.chat-body {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background-color: var(--color-perla);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat-message {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    max-width: 80%;
+    line-height: 1.4;
+}
+
+.chat-message.bot {
+    background-color: var(--color-white);
+    color: var(--color-grafito);
+    align-self: flex-start;
+    border: 1px solid #E0E0E0;
+}
+
+.chat-message.user {
+    background-color: var(--color-naranja);
+    color: white;
+    align-self: flex-end;
+}
+
+.chat-footer {
+    padding: 10px;
+    background: var(--color-white);
+    border-top: 1px solid #EEEEEE;
+    display: flex;
+    gap: 8px;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    outline: none;
+    font-family: 'Poppins', sans-serif;
+    font-size: 13px;
+}
+
+.chat-send {
+    background-color: var(--color-naranja);
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* BOTONES GENERALES */
+.btn-primary {
+    background-color: var(--color-naranja);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+    box-shadow: 0 4px 10px rgba(255, 128, 0, 0.3);
+    transition: background 0.3s;
+    border: none;
+    cursor: pointer;
+    font-family: 'Fredoka', sans-serif;
+}
+
+.btn-primary:hover {
+    background-color: #E67300;
+}
+
+.main-container {
+    padding: 40px 50px;
+    min-height: 80vh;
+}

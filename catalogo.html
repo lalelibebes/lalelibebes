@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laleli Bebés 🌸 - Catálogo Mayorista</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Librería oficial de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Poppins', sans-serif; margin: 0; background-color: #f9f9f9; color: #333; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: relative; z-index: 100; }
+        .logo { font-family: 'Fredoka', sans-serif; font-size: 24px; color: #FF7043; text-decoration: none; font-weight: bold; }
+        nav { display: flex; align-items: center; gap: 20px; }
+        nav a { text-decoration: none; color: #555; font-weight: 600; font-size: 14px; }
+        nav a:hover, nav a.active { color: #FF7043; }
+
+        /* Botón de Carrito en el Header */
+        .header-cart-btn {
+            background: #fff3f0;
+            border: 1px solid #ffdcd0;
+            color: #FF7043;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        .header-cart-btn:hover {
+            background: #ffe8e3;
+        }
+        .cart-badge-count {
+            background: #FF7043;
+            color: white;
+            border-radius: 50%;
+            padding: 1px 6px;
+            font-size: 11px;
+        }
+
+        /* Contenedor principal expandido */
+        .catalog-wrapper {
+            width: 96%;
+            max-width: 1450px;
+            margin: 25px auto;
+            padding: 0 10px;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .catalog-wrapper {
+                grid-template-columns: 1fr;
+                width: 100%;
+                padding: 0 10px;
+            }
+        }
+
+        /* Panel Lateral de Filtros */
+        .filters-sidebar {
+            background: #fff;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid #eaeaea;
+            height: fit-content;
+        }
+        .filters-sidebar h3 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 17px;
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #333;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 8px;
+        }
+        .filter-group {
+            margin-bottom: 15px;
+        }
+        .filter-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #555;
+        }
+        .filter-group input, .filter-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 12px;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Botón Principal Estilo Acordeón */
+        .accordion-main-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background-color: #fff3f0;
+            color: #FF7043;
+            border: 1px solid #ffdcd0;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: left;
+            transition: background 0.2s;
+            box-sizing: border-box;
+            margin-bottom: 4px;
+        }
+        .accordion-main-btn:hover {
+            background-color: #ffe8e3;
+        }
+        .accordion-main-btn i {
+            transition: transform 0.3s ease;
+            font-size: 11px;
+        }
+        .accordion-main-btn.collapsed i {
+            transform: rotate(-90deg);
+        }
+
+        .accordion-content {
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+            opacity: 1;
+            margin-top: 4px;
+        }
+        .accordion-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            pointer-events: none;
+        }
+
+        .category-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .category-list li {
+            padding: 7px 10px;
+            margin-bottom: 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #555;
+            transition: background 0.2s, color 0.2s;
+        }
+        .category-list li:hover, .category-list li.active {
+            background-color: #fff3f0;
+            color: #FF7043;
+            font-weight: 600;
+        }
+
+        /* Contenido del Catálogo (Derecha) */
+        .catalog-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .catalog-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 5px;
+        }
+        .catalog-header-bar h1 {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 24px;
+            margin: 0;
+            color: #333;
+        }
+        .product-count {
+            font-size: 13px;
+            color: #777;
+        }
+
+        /* Grilla de Productos */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        .product-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #eaeaea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        }
+        .product-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #f4f4f4;
+        }
+        .product-card h3 {
+            font-size: 14px;
+            margin: 10px 0 4px;
+            color: #333;
+            font-weight: 600;
+        }
+        .product-card .tags-container {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+        .product-card .badge {
+            font-size: 10px;
+            background: #f1f1f1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #666;
+        }
+        .product-card .badge-talle {
+            background: #e8f4fd;
+            color: #0277bd;
+        }
+        .product-card .price {
+            color: #FF7043;
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+        .btn-add {
+            background-color: #FF7043;
+            color: white;
+            border: none;
+            padding: 9px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .btn-add:hover {
+            background-color: #F4511E;
+        }
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: #777;
+            font-size: 14px;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px dashed #ddd;
+        }
+
+        /* --- WIDGETS FLOTANTES (WhatsApp & Chatbot) --- */
+        .floating-widgets {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 999;
+        }
+        .float-btn {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 26px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s;
+        }
+        .float-btn:hover {
+            transform: scale(1.08);
+        }
+        .whatsapp-btn {
+            background-color: #25D366;
+        }
+        .chatbot-btn {
+            background-color: #FF7043;
+        }
+
+        /* --- VENTANA MODAL DEL CHATBOT --- */
+        .chatbot-modal {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 320px;
+            max-height: 450px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+            border: 1px solid #eaeaea;
+            transition: all 0.3s ease;
+            transform: scale(0);
+            transform-origin: bottom right;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .chatbot-modal.active {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .chatbot-header {
+            background: #FF7043;
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 15px;
+        }
+        .chatbot-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .chatbot-messages {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            max-height: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #fafafa;
+        }
+        .chat-msg {
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+        .chat-msg.bot {
+            background: #fff;
+            color: #333;
+            align-self: flex-start;
+            border: 1px solid #eee;
+        }
+        .chat-msg.user {
+            background: #FF7043;
+            color: white;
+            align-self: flex-end;
+        }
+        .chatbot-input-area {
+            display: flex;
+            padding: 8px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+        .chatbot-input-area input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 12px;
+            outline: none;
+        }
+        .chatbot-input-area button {
+            background: #FF7043;
+            color: white;
+            border: none;
+            padding: 0 12px;
+            margin-left: 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* --- MODAL DEL CARRITO / PEDIDO --- */
+        .cart-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .cart-modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .cart-modal {
+            background: white;
+            width: 90%;
+            max-width: 450px;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            max-height: 80vh;
+        }
+        .cart-modal h2 {
+            font-family: 'Fredoka', sans-serif;
+            margin-top: 0;
+            color: #333;
+            font-size: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .cart-items-list {
+            flex: 1;
+            overflow-y: auto;
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .cart-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        .cart-item-row button {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .cart-total {
+            font-size: 16px;
+            font-weight: bold;
+            text-align: right;
+            margin: 10px 0;
+            color: #FF7043;
+        }
+        .cart-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-checkout {
+            flex: 1;
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-close-cart {
+            background: #ddd;
+            color: #333;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">Laleli Bebés 🌸</a>
+        <nav>
+            <a href="index.html">INICIO</a>
+            <a href="catalogo.html" class="active">CATÁLOGO</a>
+            <button class="header-cart-btn" onclick="abrirCarrito()">
+                <i class="fa-solid fa-cart-shopping"></i> Pedido <span id="cartCountBadge" class="cart-badge-count">0</span>
+            </button>
+        </nav>
+    </header>
+
+    <div class="catalog-wrapper">
+        <!-- Panel Lateral de Filtros -->
+        <aside class="filters-sidebar">
+            <h3>Filtrar Catálogo</h3>
+            
+            <div class="filter-group">
+                <label for="searchTxt">Buscar prenda</label>
+                <input type="text" id="searchTxt" placeholder="Ej: Body, Enterito..." onkeyup="filtrarProductos()">
+            </div>
+
+            <!-- Filtro por Categorías -->
+            <div class="filter-group">
+                <label style="margin-bottom: 4px; color: #777; font-size: 11px; text-transform: uppercase; font-weight: bold;">Categorías</label>
+                <button class="accordion-main-btn" onclick="toggleAcordeon('catAccordion', this)">
+                    <span id="txtBtnCat">Todas las prendas</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                
+                <div id="catAccordion" class="accordion-content collapsed">
+                    <ul class="category-list" id="categoryList">
+                        <li class="active" onclick="seleccionarFiltro('cat', 'Todas', 'Todas las prendas', this)">Todas las prendas</li>
+                        <li onclick="seleccionarFiltro('cat', 'Bodys', 'Bodys', this)">Bodys</li>
+                        <li onclick="seleccionarFiltro('cat', 'Enteritos', 'Enteritos y Mamelucos', this)">Enteritos y Mamelucos</li>
+                        <li onclick="seleccionarFiltro('cat', 'Pijamas', 'Pijamas', this)">Pijamas</li>
+                        <li onclick="seleccionarFiltro('cat', 'Conjuntos', 'Conjuntos', this)">Conjuntos</li>
+                        <li onclick="seleccionarFiltro('cat', 'Pantalones y Shorts', 'Pantalones y Shorts', this)">Pantalones y Shorts</li>
+                        <li onclick="seleccionarFiltro('cat', 'Remeras y Camisas', 'Remeras y Camisas', this)">Remeras y Camisas</li>
+                        <li onclick="seleccionarFiltro('cat', 'Abrigos', 'Abrigos (Camperas / Sweaters)', this)">Abrigos (Camperas / Sweaters)</li>
+                        <li onclick="seleccionarFiltro('cat', 'Accesorios', 'Accesorios (Gorros, Medias)', this)">Accesorios (Gorros, Medias)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Filtro por Talles -->
+            <div class="filter-group">
+                <label style="margin-bottom: 4px; color: #777; font-size: 11px; text-transform: uppercase; font-weight: bold;">Talles (0 a 24 Meses)</label>
+                <button class="accordion-main-btn" onclick="toggleAcordeon('talleAccordion', this)">
+                    <span id="txtBtnTalle">Todos los talles</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+
+                <div id="talleAccordion" class="accordion-content collapsed">
+                    <ul class="category-list" id="talleList">
+                        <li class="active" onclick="seleccionarFiltro('talle', 'Todos', 'Todos los talles', this)">Todos los talles</li>
+                        <li onclick="seleccionarFiltro('talle', 'RN', 'Recién Nacido (RN)', this)">Recién Nacido (RN)</li>
+                        <li onclick="seleccionarFiltro('talle', '0-3M', '0 a 3 Meses', this)">0 a 3 Meses</li>
+                        <li onclick="seleccionarFiltro('talle', '3-6M', '3 a 6 Meses', this)">3 a 6 Meses</li>
+                        <li onclick="seleccionarFiltro('talle', '6-9M', '6 a 9 Meses', this)">6 a 9 Meses</li>
+                        <li onclick="seleccionarFiltro('talle', '9-12M', '9 a 12 Meses', this)">9 a 12 Meses</li>
+                        <li onclick="seleccionarFiltro('talle', '12-18M', '12 a 18 Meses', this)">12 a 18 Meses</li>
+                        <li onclick="seleccionarFiltro('talle', '18-24M', '18 a 24 Meses', this)">18 a 24 Meses</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="orderBy">Ordenar por precio</label>
+                <select id="orderBy" onchange="filtrarProductos()">
+                    <option value="defecto">Más recientes</option>
+                    <option value="menor">Menor a Mayor precio</option>
+                    <option value="mayor">Mayor a Menor precio</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- Grilla Principal de Productos -->
+        <main class="catalog-content">
+            <div class="catalog-header-bar">
+                <h1>Catálogo Mayorista 0 a 24 Meses</h1>
+                <span id="productCount" class="product-count">Cargando productos...</span>
+            </div>
+
+            <div id="catalogGrid" class="product-grid">
+                <!-- Los productos se cargarán dinámicamente -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Widgets Flotantes (WhatsApp & ChatBot) -->
+    <div class="floating-widgets">
+        <a href="https://wa.me/5491135467677?text=Hola,%20quiero%20hacer%20una%20consulta%20mayorista%20sobre%20Laleli%20Bebés" target="_blank" class="float-btn whatsapp-btn" title="Escribinos por WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+        <div class="float-btn chatbot-btn" onclick="toggleChatbot()" title="Asistente Virtual">
+            <i class="fa-solid fa-comments"></i>
+        </div>
+    </div>
+
+    <!-- Ventana del Chatbot -->
+    <div id="chatbotModal" class="chatbot-modal">
+        <div class="chatbot-header">
+            <span>🌸 Asistente Laleli Bebés</span>
+            <button onclick="toggleChatbot()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="chatMessages" class="chatbot-messages">
+            <div class="chat-msg bot">¡Hola! 🌸 Soy el asistente virtual de Laleli Bebés. ¿En qué puedo ayudarte con tus compras mayoristas hoy?</div>
+        </div>
+        <div class="chatbot-input-area">
+            <input type="text" id="chatInput" placeholder="Escribí tu consulta..." onkeypress="if(event.key === 'Enter') enviarMensajeChat()">
+            <button onclick="enviarMensajeChat()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Modal del Carrito / Pedido -->
+    <div id="cartModalOverlay" class="cart-modal-overlay">
+        <div class="cart-modal">
+            <h2>
+                <span>Tu Pedido Mayorista</span>
+                <button onclick="cerrarCarrito()" style="background:none; border:none; font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </h2>
+            <div id="cartItemsList" class="cart-items-list">
+                <!-- Ítems agregados dinámicamente -->
+            </div>
+            <div id="cartTotal" class="cart-total">Total: $ 0</div>
+            <div class="cart-actions">
+                <button class="btn-checkout" onclick="enviarPedidoWhatsApp()"><i class="fa-brands fa-whatsapp"></i> Enviar pedido por WhatsApp</button>
+                <button class="btn-close-cart" onclick="cerrarCarrito()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://dsjfplkhcnsieoprmeji.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_o2UFEKW_09P5rKnifofTHw_HMVistq0";
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let listaProductosGlobal = [];
+        let categoriaSeleccionada = 'Todas';
+        let talleSeleccionado = 'Todos';
+        let carrito = [];
+
+        function toggleAcordeon(idContenido, btnElement) {
+            const contenido = document.getElementById(idContenido);
+            contenido.classList.toggle('collapsed');
+            btnElement.classList.toggle('collapsed');
+        }
+
+        async function inicializarCatalogo() {
+            try {
+                const { data: productos, error } = await supabaseClient
+                    .from('productos')
+                    .select('*');
+
+                if (error) throw error;
+
+                listaProductosGlobal = productos || [];
+                mostrarProductos(listaProductosGlobal);
+            } catch (err) {
+                console.error('Error al cargar catálogo:', err.message);
+                document.getElementById('catalogGrid').innerHTML = '<div class="no-results" style="color: red;">Error al conectar con la base de datos.</div>';
+            }
+        }
+
+        function seleccionarFiltro(tipo, valorFiltro, textoBoton, elementoLi) {
+            if (tipo === 'cat') {
+                categoriaSeleccionada = valorFiltro;
+                document.getElementById('txtBtnCat').textContent = textoBoton;
+                document.querySelectorAll('#categoryList li').forEach(el => el.classList.remove('active'));
+                document.getElementById('catAccordion').classList.add('collapsed');
+                document.querySelector('#catAccordion').previousElementSibling.classList.add('collapsed');
+            } else if (tipo === 'talle') {
+                talleSeleccionado = valorFiltro;
+                document.getElementById('txtBtnTalle').textContent = textoBoton;
+                document.querySelectorAll('#talleList li').forEach(el => el.classList.remove('active'));
+                document.getElementById('talleAccordion').classList.add('collapsed');
+                document.querySelector('#talleAccordion').previousElementSibling.classList.add('collapsed');
+            }
+            elementoLi.classList.add('active');
+            filtrarProductos();
+        }
+
+        function filtrarProductos() {
+            const textoBusqueda = document.getElementById('searchTxt').value.toLowerCase();
+            const orden = document.getElementById('orderBy').value;
+
+            let resultado = listaProductosGlobal.filter(prod => {
+                const nombre = prod.nombre ? prod.nombre.toLowerCase() : '';
+                const descripcion = prod.descripcion ? prod.descripcion.toLowerCase() : '';
+                const categoria = prod.categoria || '';
+
+                const coincideTexto = nombre.includes(textoBusqueda) || descripcion.includes(textoBusqueda);
+                const coincideCategoria = categoriaSeleccionada === 'Todas' || categoria === categoriaSeleccionada;
+                const coincideTalle = talleSeleccionado === 'Todos' || 
+                                     descripcion.includes(talleSeleccionado.toLowerCase()) || 
+                                     nombre.includes(talleSeleccionado.toLowerCase());
+
+                return coincideTexto && coincideCategoria && coincideTalle;
+            });
+
+            if (orden === 'menor') {
+                resultado.sort((a, b) => a.precio - b.precio);
+            } else if (orden === 'mayor') {
+                resultado.sort((a, b) => b.precio - a.precio);
+            }
+
+            mostrarProductos(resultado);
+        }
+
+        function mostrarProductos(productos) {
+            const grid = document.getElementById('catalogGrid');
+            const contador = document.getElementById('productCount');
+
+            contador.textContent = `${productos.length} producto${productos.length === 1 ? '' : 's'} disponible${productos.length === 1 ? '' : 's'}`;
+
+            if (!productos || productos.length === 0) {
+                grid.innerHTML = '<div class="no-results">No se encontraron prendas con los filtros seleccionados.</div>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            productos.forEach(prod => {
+                const precioFormateado = Number(prod.precio).toLocaleString('es-AR');
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.innerHTML = `
+                    <div>
+                        <img src="${prod.imagen_url || 'https://via.placeholder.com/200'}" alt="${prod.nombre}">
+                        <h3>${prod.nombre}</h3>
+                        <div class="tags-container">
+                            ${prod.categoria ? `<span class="badge">${prod.categoria}</span>` : ''}
+                            ${prod.descripcion ? `<span class="badge badge-talle">${prod.descripcion}</span>` : ''}
+                        </div>
+                        <div class="price">$ ${precioFormateado}</div>
+                    </div>
+                    <button class="btn-add" onclick='agregarAlCarrito(${JSON.stringify(prod)})'>AGREGAR AL PEDIDO</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        /* --- LÓGICA DE CARRITO --- */
+        function agregarAlCarrito(producto) {
+            carrito.push(producto);
+            actualizarContadorCarrito();
+            // Notificación visual rápida
+            const btn = document.querySelector('.header-cart-btn');
+            btn.style.transform = 'scale(1.1)';
+            setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
+        }
+
+        function actualizarContadorCarrito() {
+            document.getElementById('cartCountBadge').textContent = carrito.length;
+        }
+
+        function abrirCarrito() {
+            const lista = document.getElementById('cartItemsList');
+            lista.innerHTML = '';
+            let total = 0;
+
+            if (carrito.length === 0) {
+                lista.innerHTML = '<div style="text-align:center; color:#777; padding:20px;">Tu carrito de pedido está vacío.</div>';
+            } else {
+                carrito.forEach((item, index) => {
+                    total += Number(item.precio);
+                    const row = document.createElement('div');
+                    row.className = 'cart-item-row';
+                    row.innerHTML = `
+                        <div>
+                            <strong>${item.nombre}</strong><br>
+                            <small style="color:#777;">$ ${Number(item.precio).toLocaleString('es-AR')}</small>
+                        </div>
+                        <button onclick="eliminarDelCarrito(${index})"><i class="fa-solid fa-trash"></i></button>
+                    `;
+                    lista.appendChild(row);
+                });
+            }
+
+            document.getElementById('cartTotal').textContent = `Total: $ ${total.toLocaleString('es-AR')}`;
+            document.getElementById('cartModalOverlay').classList.add('active');
+        }
+
+        function cerrarCarrito() {
+            document.getElementById('cartModalOverlay').classList.remove('active');
+        }
+
+        function eliminarDelCarrito(index) {
+            carrito.splice(index, 1);
+            actualizarContadorCarrito();
+            abrirCarrito();
+        }
+
+        function enviarPedidoWhatsApp() {
+            if (carrito.length === 0) {
+                alert('Agregá productos a tu pedido antes de enviarlo.');
+                return;
+            }
+            let mensaje = 'Hola! Quiero realizar el siguiente pedido mayorista desde Laleli Bebés:%0A%0A';
+            let total = 0;
+            carrito.forEach((item, i) => {
+                mensaje += `${i+1}. ${item.nombre} - $ ${Number(item.precio).toLocaleString('es-AR')}%0A`;
+                total += Number(item.precio);
+            });
+            mensaje += `%0A*TOTAL: $ ${total.toLocaleString('es-AR')}*`;
+            window.open(`https://wa.me/5491135467677?text=${mensaje}`, '_blank');
+        }
+
+        /* --- LÓGICA DEL CHATBOT --- */
+        function toggleChatbot() {
+            const modal = document.getElementById('chatbotModal');
+            modal.classList.toggle('active');
+        }
+
+        function enviarMensajeChat() {
+            const input = document.getElementById('chatInput');
+            const texto = input.value.trim();
+            if (!texto) return;
+
+            const contenedor = document.getElementById('chatMessages');
+            
+            // Mensaje usuario
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-msg user';
+            userMsg.textContent = texto;
+            contenedor.appendChild(userMsg);
+
+            input.value = '';
+            contenedor.scrollTop = contenedor.scrollHeight;
+
+            // Respuesta automática del bot simulada
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = 'chat-msg bot';
+                
+                const txtLower = texto.toLowerCase();
+                if (txtLower.includes('minima') || txtLower.includes('mínima') || txtLower.includes('compra')) {
+                    botMsg.textContent = 'La compra mínima mayorista es a partir de $50.000 o surtido en prendas de 0 a 24 meses. 🌸';
+                } else if (txtLower.includes('envio') || txtLower.includes('envíos') || txtLower.includes('correo')) {
+                    botMsg.textContent = 'Hacemos envíos a todo el país a través de correo o expreso a cargo del comprador. 📦';
+                } else if (txtLower.includes('pago') || txtLower.includes('transferencia')) {
+                    botMsg.textContent = 'Aceptamos transferencias bancarias y depósitos con un descuento especial en efectivo/transferencia. 💳';
+                } else {
+                    botMsg.textContent = '¡Gracias por consultar! Podés armar tu pedido con los botones de la web y enviarlo directamente por WhatsApp para coordinar el pago. 🌸';
+                }
+
+                contenedor.appendChild(botMsg);
+                contenedor.scrollTop = contenedor.scrollHeight;
+            }, 600);
+        }
+
+        inicializarCatalogo();
+    </script>
+</body>
+</html>

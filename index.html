@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laleli Bebés - Inicio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #FFF8F0;
+            border-radius: 20px;
+            padding: 50px;
+            margin-bottom: 40px;
+            border: 1px solid #FFE5CC;
+        }
+        .hero-content { max-width: 50%; }
+        .hero-content h1 { font-size: 38px; color: var(--color-naranja); margin-bottom: 15px; line-height: 1.2; }
+        .hero-content p { font-size: 16px; margin-bottom: 25px; color: var(--color-grafito); }
+        .hero-image img { width: 350px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 20px;
+        }
+        .feature-box {
+            background: var(--color-white);
+            padding: 35px 25px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border: 1px solid #EAEAEA;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        .feature-box:hover {
+            transform: translateY(-5px);
+            border-color: var(--color-naranja);
+        }
+        .feature-box i {
+            font-size: 42px;
+            color: var(--color-naranja);
+            margin-bottom: 15px;
+        }
+        .feature-box h3 {
+            font-size: 20px;
+            color: var(--color-grafito);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .feature-box p {
+            font-size: 15px;
+            color: #666;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .hero { flex-direction: column; text-align: center; padding: 30px; }
+            .hero-content { max-width: 100%; margin-bottom: 30px; }
+            .hero-image img { width: 100%; max-width: 300px; }
+            .features-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">Laleli Bebés 🌸</a>
+        <nav>
+            <a href="index.html" class="active">INICIO</a>
+            <a href="catalogo.html">CATÁLOGO</a>
+        </nav>
+    </header>
+
+    <div class="main-container">
+        <div class="hero">
+            <div class="hero-content">
+                <h1>Indumentaria Exclusiva con Ternura y Calidad</h1>
+                <p>Descubre nuestras colecciones pensadas para acompañar los primeros pasos y cuidar la piel de los más pequeños.</p>
+                <a href="catalogo.html" class="btn-primary">VER CATÁLOGO COMPLETO</a>
+            </div>
+            <div class="hero-image">
+                <img src="https://images.unsplash.com/photo-1522771930-78848d9293e8?auto=format&fit=crop&w=500&q=80" alt="Bebé Laleli">
+            </div>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-box">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <h3>VENTAS MAYORISTAS</h3>
+                <p>Precios especiales para revendedores, locales y emprendedores. Confección propia de excelente calidad en indumentaria para bebés de 0 a 24 meses.</p>
+            </div>
+            <div class="feature-box">
+                <i class="fa-solid fa-truck-fast"></i>
+                <h3>ENVÍOS A TODO EL PAÍS</h3>
+                <p>Despachamos tus pedidos de forma rápida y segura a través de expresos y correos para que tu mercadería llegue a destino sin inconvenientes.</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

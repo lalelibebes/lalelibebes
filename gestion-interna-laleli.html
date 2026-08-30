@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laleli Bebés - Panel Administradora</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Librería oficial de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    // Definí la contraseña que ella va a usar
+    const passwordAdmin = "laleli2026"; 
+    
+    let ingreso = prompt("🔒 Acceso Restringido. Ingrese la contraseña de administración:");
+    
+    if (ingreso !== passwordAdmin) {
+        alert("Contraseña incorrecta. Acceso denegado.");
+        window.location.href = "index.html"; // La redirige al inicio si falla
+    }
+</script>
+    <style>
+        .admin-container { max-width: 900px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #EAEAEA; }
+        .admin-title { font-size: 24px; color: #333; margin-bottom: 20px; border-bottom: 2px solid #EEE; padding-bottom: 10px; font-family: 'Fredoka', sans-serif; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 5px; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-family: 'Poppins', sans-serif; box-sizing: border-box; }
+        #imgPreview { max-width: 150px; max-height: 150px; margin-top: 10px; display: none; border-radius: 8px; object-fit: cover; border: 1px solid #EAEAEA; }
+        .btn-primary { background-color: #FF7043; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
+        .btn-primary:hover { background-color: #F4511E; }
+        .btn-secondary { background-color: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-top: 5px; display: none; width: 100%; }
+        
+        /* Estilos para la tabla de gestión */
+        .product-table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+        .product-table th, .product-table td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; font-size: 14px; }
+        .product-table th { background-color: #f8f9fa; color: #333; font-family: 'Fredoka', sans-serif; }
+        .product-table img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+        .btn-edit { background-color: #ffc107; color: #000; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .btn-delete { background-color: #dc3545; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        /* Estilo para la notificación flotante moderna (Toast) */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 14px;
+            position: fixed;
+            z-index: 1000;
+            right: 30px;
+            bottom: 30px;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        #toast.show {
+            visibility: visible;
+            transform: translateY(0);
+            opacity: 1;
+        }
+        #toast.success { background-color: #2e7d32; }
+        #toast.error { background-color: #d32f2f; }
+
+        /* Estilos para el Modal de Confirmación Personalizado */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .custom-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .custom-modal {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        .custom-modal-overlay.active .custom-modal {
+            transform: scale(1);
+        }
+        .custom-modal h3 {
+            margin-top: 0;
+            color: #333;
+            font-family: 'Fredoka', sans-serif;
+            font-size: 20px;
+        }
+        .custom-modal p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .custom-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .btn-modal-cancel {
+            background-color: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-modal-confirm {
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Contenedor de la Notificación Flotante -->
+    <div id="toast"></div>
+
+    <!-- Modal de Confirmación Personalizado -->
+    <div id="customModal" class="custom-modal-overlay">
+        <div class="custom-modal">
+            <h3>¿Estás segura?</h3>
+            <p id="modalMessage">¿Deseas realizar esta acción?</p>
+            <div class="custom-modal-buttons">
+                <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
+                <button id="btnModalConfirmAction" class="btn-modal-confirm">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <a href="index.html" class="logo">Laleli Bebés 🌸</a>
+        <nav>
+            <a href="index.html">INICIO</a>
+            <a href="catalogo.html">CATÁLOGO</a>
+            <a href="admin.html" class="active" style="color: #D90429;">PANEL ADMIN 🔐</a>
+        </nav>
+    </header>
+
+    <div class="main-container">
+        <div class="admin-container">
+            <h2 id="formTitle" class="admin-title">Subir Nuevo Producto a Supabase</h2>
+            
+            <form id="addProductForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="nombre">Nombre del Artículo</label>
+                    <input type="text" id="nombre" placeholder="Ej: Enterito Algodón Estampado" required>
+                </div>
+                <div class="form-group">
+                    <label for="categoria">Categoría</label>
+                    <input type="text" id="categoria" placeholder="Ej: Enteritos" required>
+                </div>
+                <div class="form-group">
+                    <label for="descripcion">Descripción / Curva de Talles</label>
+                    <input type="text" id="descripcion" placeholder="Ej: Pack x 3 unidades, Talles RN a 3M" required>
+                </div>
+                <div class="form-group">
+                    <label for="precio">Precio Mayorista ($)</label>
+                    <input type="number" id="precio" placeholder="45000" required>
+                </div>
+                <div class="form-group">
+                    <label for="imagenArticulo">Subir Imagen del Producto</label>
+                    <input type="file" id="imagenArticulo" accept="image/*" onchange="previewImage(this);">
+                    <img id="imgPreview" src="#" alt="Previsualización" />
+                </div>
+                <button type="submit" id="btnSubmit" class="btn-primary">SUBIR PRODUCTO A LA WEB</button>
+                <button type="button" id="btnCancelEdit" class="btn-secondary" onclick="resetForm()">Cancelar Edición</button>
+            </form>
+
+            <h2 class="admin-title" style="margin-top: 40px;">Productos Existentes en la Base</h2>
+            <div style="overflow-x: auto;">
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>Imagen</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminProductTableBody">
+                        <tr><td colspan="4" style="text-align: center;">Cargando productos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE SUPABASE
+        const SUPABASE_URL = "https://dsjfplkhcnsieoprmeji.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_o2UFEKW_09P5rKnifofTHw_HMVistq0";
+        
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Función para mostrar notificación flotante moderna
+        function mostrarToast(mensaje, tipo = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensaje;
+            toast.className = `show ${tipo}`;
+            setTimeout(() => {
+                toast.className = toast.className.replace('show', '');
+            }, 3000);
+        }
+
+        // Control del Modal Personalizado
+        function abrirModalConfirmacion(texto, callback) {
+            document.getElementById('modalMessage').textContent = texto;
+            const modal = document.getElementById('customModal');
+            modal.classList.add('active');
+
+            const btnConfirm = document.getElementById('btnModalConfirmAction');
+            // Limpiar eventos anteriores clonando el botón
+            const nuevoBtn = btnConfirm.cloneNode(true);
+            btnConfirm.parentNode.replaceChild(nuevoBtn, btnConfirm);
+
+            nuevoBtn.addEventListener('click', () => {
+                cerrarModal();
+                callback();
+            });
+        }
+
+        function cerrarModal() {
+            document.getElementById('customModal').classList.remove('active');
+        }
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var preview = document.getElementById('imgPreview');
+                    preview.setAttribute('src', e.target.result);
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Cargar productos en la tabla del panel
+        async function cargarProductosAdmin() {
+            const tbody = document.getElementById('adminProductTableBody');
+            try {
+                const { data: productos, error } = await supabaseClient
+                    .from('productos')
+                    .select('*');
+
+                if (error) throw error;
+
+                if (!productos || productos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No hay productos cargados.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                productos.forEach(prod => {
+                    const tr = document.createElement('tr');
+                    const precioFormateado = Number(prod.precio).toLocaleString('es-AR');
+                    tr.innerHTML = `
+                        <td><img src="${prod.imagen_url || 'https://via.placeholder.com/50'}" alt=""></td>
+                        <td><strong>${prod.nombre}</strong><br><small style="color:#666;">${prod.categoria || ''}</small></td>
+                        <td>$ ${precioFormateado}</td>
+                        <td>
+                            <button class="btn-edit" onclick="prepararEdicion('${prod.id}', '${prod.nombre.replace(/'/g, "\\'")}', '${prod.categoria ? prod.categoria.replace(/'/g, "\\'") : ''}', '${prod.descripcion ? prod.descripcion.replace(/'/g, "\\'") : ''}', ${prod.precio}, '${prod.imagen_url || ''}')">Editar</button>
+                            <button class="btn-delete" onclick="confirmarEliminar('${prod.id}')">Eliminar</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error('Error al cargar tabla:', err.message);
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: red;">Error al cargar: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Manejar Envío (Crear o Actualizar)
+        document.getElementById('addProductForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            const editId = document.getElementById('editId').value;
+            btn.disabled = true;
+
+            try {
+                const nombre = document.getElementById('nombre').value;
+                const categoria = document.getElementById('categoria').value;
+                const descripcion = document.getElementById('descripcion').value;
+                const precio = parseInt(document.getElementById('precio').value);
+                const fileInput = document.getElementById('imagenArticulo');
+                const file = fileInput.files[0];
+
+                let imagenUrl = document.getElementById('imgPreview').getAttribute('src');
+                if(imagenUrl === '#' || imagenUrl.startsWith('data:')) {
+                    imagenUrl = null; 
+                }
+
+                // Si hay nueva imagen, subirla
+                if (file) {
+                    btn.textContent = 'Subiendo imagen...';
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}.${fileExt}`;
+                    
+                    const { error: uploadError } = await supabaseClient.storage
+                        .from('fotos-productos2')
+                        .upload(fileName, file);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: publicUrlData } = supabaseClient.storage
+                        .from('fotos-productos2')
+                        .getPublicUrl(fileName);
+
+                    imagenUrl = publicUrlData.publicUrl;
+                }
+
+                if (editId) {
+                    // MODO ACTUALIZAR
+                    btn.textContent = 'Actualizando producto...';
+                    const updateData = { nombre, categoria, descripcion, precio };
+                    if (imagenUrl && !imagenUrl.startsWith('data:')) {
+                        updateData.imagen_url = imagenUrl;
+                    }
+
+                    const { error: updateError } = await supabaseClient
+                        .from('productos')
+                        .update(updateData)
+                        .eq('id', editId);
+
+                    if (updateError) throw updateError;
+                    mostrarToast('¡Producto actualizado con éxito!', 'success');
+                } else {
+                    // MODO CREAR NUEVO
+                    btn.textContent = 'Guardando producto...';
+                    if (!file) throw new Error('Selecciona una imagen para el nuevo producto.');
+
+                    const { error: insertError } = await supabaseClient
+                        .from('productos')
+                        .insert([{ nombre, categoria, descripcion, precio, imagen_url: imagenUrl, estado: 'Activo', disponible: true }]);
+
+                    if (insertError) throw insertError;
+                    mostrarToast('¡Producto subido con éxito!', 'success');
+                }
+
+                resetForm();
+                cargarProductosAdmin();
+
+            } catch (error) {
+                console.error('Error:', error.message);
+                mostrarToast('Hubo un error: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Rellenar formulario para editar
+        function prepararEdicion(id, nombre, categoria, descripcion, precio, imagen_url) {
+            document.getElementById('editId').value = id;
+            document.getElementById('nombre').value = nombre;
+            document.getElementById('categoria').value = categoria;
+            document.getElementById('descripcion').value = descripcion;
+            document.getElementById('precio').value = precio;
+            
+            if (imagen_url) {
+                const preview = document.getElementById('imgPreview');
+                preview.setAttribute('src', imagen_url);
+                preview.style.display = 'block';
+            }
+
+            document.getElementById('formTitle').textContent = 'Editar Producto Existente';
+            document.getElementById('btnSubmit').textContent = 'GUARDAR CAMBIOS';
+            document.getElementById('btnCancelEdit').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Notificación visual de que entró en modo edición
+            mostrarToast('Modo edición activado', 'success');
+        }
+
+        // Cancelar modo edición
+        function resetForm() {
+            document.getElementById('addProductForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('imgPreview').style.display = 'none';
+            document.getElementById('imgPreview').setAttribute('src', '#');
+            document.getElementById('formTitle').textContent = 'Subir Nuevo Producto a Supabase';
+            document.getElementById('btnSubmit').textContent = 'SUBIR PRODUCTO A LA WEB';
+            document.getElementById('btnCancelEdit').style.display = 'none';
+        }
+
+        // Lanzar modal personalizado para eliminar
+        function confirmarEliminar(id) {
+            abrirModalConfirmacion('¿Estás segura de que deseas eliminar este producto?', async () => {
+                try {
+                    const { error } = await supabaseClient
+                        .from('productos')
+                        .delete()
+                        .eq('id', id);
+
+                    if (error) throw error;
+                    mostrarToast('Producto eliminado correctamente.', 'success');
+                    cargarProductosAdmin();
+                } catch (err) {
+                    console.error('Error al eliminar:', err.message);
+                    mostrarToast('No se pudo eliminar el producto: ' + err.message, 'error');
+                }
+            });
+        }
+
+        // Cargar al iniciar la página
+        cargarProductosAdmin();
+    </script>
+</body>
+</html>
