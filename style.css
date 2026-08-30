@@ -38,10 +38,12 @@ header {
 }
 
 .logo {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 700;
     color: var(--color-naranja);
     text-decoration: none;
+    letter-spacing: 3px;
+    text-transform: uppercase;
 }
 
 nav a {
