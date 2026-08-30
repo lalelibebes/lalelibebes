@@ -209,19 +209,69 @@
             transform: translateY(-4px);
             box-shadow: 0 6px 16px rgba(0,0,0,0.08);
         }
-        .product-card img {
+
+        /* Carrusel de fotos en miniatura */
+        .card-carousel {
+            position: relative;
             width: 100%;
             height: 180px;
-            object-fit: cover;
-            border-radius: 8px;
             background: #f4f4f4;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            cursor: pointer;
         }
+        .carousel-track {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease-in-out;
+        }
+        .carousel-slide {
+            min-width: 100%;
+            height: 100%;
+        }
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.4);
+            color: white;
+            border: none;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            z-index: 2;
+            transition: background 0.2s;
+        }
+        .carousel-btn:hover {
+            background: rgba(0,0,0,0.7);
+        }
+        .carousel-prev { left: 6px; }
+        .carousel-next { right: 6px; }
+
         .product-card h3 {
             font-size: 14px;
-            margin: 10px 0 4px;
+            margin: 4px 0 4px;
+            cursor: pointer;
             color: #333;
             font-weight: 600;
+            transition: color 0.2s;
         }
+        .product-card h3:hover {
+            color: #FF7043;
+        }
+
         .product-card .tags-container {
             display: flex;
             gap: 4px;
@@ -272,7 +322,81 @@
             border: 1px dashed #ddd;
         }
 
-        /* --- WIDGETS FLOTANTES (WhatsApp & Chatbot) --- */
+        /* --- MODAL DE DETALLE DE PRODUCTO --- */
+        .product-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .product-modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .product-modal {
+            background: white;
+            width: 90%;
+            max-width: 650px;
+            border-radius: 14px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        @media (max-width: 600px) {
+            .product-modal {
+                grid-template-columns: 1fr;
+            }
+        }
+        .modal-close-btn {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #777;
+        }
+        .modal-close-btn:hover { color: #333; }
+        .modal-carousel {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            background: #f4f4f4;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .modal-info h2 {
+            font-family: 'Fredoka', sans-serif;
+            margin-top: 0;
+            font-size: 20px;
+            color: #333;
+        }
+        .modal-price {
+            color: #FF7043;
+            font-size: 22px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .modal-desc {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        /* --- WIDGETS FLOTANTES --- */
         .floating-widgets {
             position: fixed;
             bottom: 20px;
@@ -296,23 +420,17 @@
             text-decoration: none;
             transition: transform 0.2s;
         }
-        .float-btn:hover {
-            transform: scale(1.08);
-        }
-        .whatsapp-btn {
-            background-color: #25D366;
-        }
-        .chatbot-btn {
-            background-color: #FF7043;
-        }
+        .float-btn:hover { transform: scale(1.08); }
+        .whatsapp-btn { background-color: #25D366; }
+        .chatbot-btn { background-color: #FF7043; }
 
         /* --- VENTANA MODAL DEL CHATBOT --- */
         .chatbot-modal {
             position: fixed;
             bottom: 90px;
             right: 20px;
-            width: 320px;
-            max-height: 450px;
+            width: 330px;
+            max-height: 500px;
             background: white;
             border-radius: 14px;
             box-shadow: 0 5px 25px rgba(0,0,0,0.15);
@@ -342,167 +460,79 @@
             font-family: 'Fredoka', sans-serif;
             font-size: 15px;
         }
-        .chatbot-header button {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
+        .chatbot-header button { background: none; border: none; color: white; font-size: 16px; cursor: pointer; }
         .chatbot-messages {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            max-height: 300px;
+            flex: 1; padding: 12px; overflow-y: auto; max-height: 340px;
+            display: flex; flex-direction: column; gap: 8px; background: #fafafa;
+        }
+        .chat-msg { padding: 8px 12px; border-radius: 10px; font-size: 12px; max-width: 85%; line-height: 1.4; }
+        .chat-msg.bot { background: #fff; color: #333; align-self: flex-start; border: 1px solid #eee; }
+        .chat-msg.user { background: #FF7043; color: white; align-self: flex-end; }
+        
+        /* Contenedor de respuestas rápidas (Chips/Botones) */
+        .chatbot-quick-replies {
             display: flex;
-            flex-direction: column;
-            gap: 8px;
-            background: #fafafa;
-        }
-        .chat-msg {
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            max-width: 80%;
-            line-height: 1.4;
-        }
-        .chat-msg.bot {
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 8px 10px;
             background: #fff;
-            color: #333;
-            align-self: flex-start;
-            border: 1px solid #eee;
-        }
-        .chat-msg.user {
-            background: #FF7043;
-            color: white;
-            align-self: flex-end;
-        }
-        .chatbot-input-area {
-            display: flex;
-            padding: 8px;
-            background: white;
             border-top: 1px solid #eee;
+            max-height: 110px;
+            overflow-y: auto;
         }
-        .chatbot-input-area input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 12px;
-            outline: none;
-        }
-        .chatbot-input-area button {
-            background: #FF7043;
-            color: white;
-            border: none;
-            padding: 0 12px;
-            margin-left: 6px;
-            border-radius: 8px;
+        .quick-reply-btn {
+            background: #fff3f0;
+            border: 1px solid #ffdcd0;
+            color: #FF7043;
+            padding: 5px 9px;
+            border-radius: 15px;
+            font-size: 11px;
             cursor: pointer;
-            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
+            font-family: 'Poppins', sans-serif;
         }
+        .quick-reply-btn:hover {
+            background: #ffe8e3;
+        }
+
+        .chatbot-input-area { display: flex; padding: 8px; background: white; border-top: 1px solid #eee; }
+        .chatbot-input-area input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; outline: none; }
+        .chatbot-input-area button { background: #FF7043; color: white; border: none; padding: 0 12px; margin-left: 6px; border-radius: 8px; cursor: pointer; font-size: 12px; }
 
         /* --- MODAL DEL CARRITO / PEDIDO --- */
         .cart-modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
-        .cart-modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .cart-modal-overlay.active { opacity: 1; pointer-events: auto; }
         .cart-modal {
-            background: white;
-            width: 90%;
-            max-width: 450px;
-            border-radius: 14px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            max-height: 80vh;
+            background: white; width: 90%; max-width: 450px; border-radius: 14px;
+            padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex; flex-direction: column; max-height: 80vh;
         }
         .cart-modal h2 {
-            font-family: 'Fredoka', sans-serif;
-            margin-top: 0;
-            color: #333;
-            font-size: 20px;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-family: 'Fredoka', sans-serif; margin-top: 0; color: #333; font-size: 20px;
+            border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .cart-items-list {
-            flex: 1;
-            overflow-y: auto;
-            margin: 10px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        .cart-items-list { flex: 1; overflow-y: auto; margin: 10px 0; display: flex; flex-direction: column; gap: 10px; }
         .cart-item-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f9f9f9;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f9f9f9; padding: 8px 12px; border-radius: 8px; font-size: 13px;
         }
-        .cart-item-row button {
-            background: #ff4d4d;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-        .cart-total {
-            font-size: 16px;
-            font-weight: bold;
-            text-align: right;
-            margin: 10px 0;
-            color: #FF7043;
-        }
-        .cart-actions {
-            display: flex;
-            gap: 10px;
-        }
+        .cart-item-row button { background: #ff4d4d; color: white; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+        .cart-total { font-size: 16px; font-weight: bold; text-align: right; margin: 10px 0; color: #FF7043; }
+        .cart-actions { display: flex; gap: 10px; }
         .btn-checkout {
-            flex: 1;
-            background: #25D366;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
+            flex: 1; background: #25D366; color: white; border: none; padding: 10px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }
-        .btn-close-cart {
-            background: #ddd;
-            color: #333;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 13px;
-        }
+        .btn-close-cart { background: #ddd; color: #333; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -551,28 +581,6 @@
                 </div>
             </div>
 
-            <!-- Filtro por Talles -->
-            <div class="filter-group">
-                <label style="margin-bottom: 4px; color: #777; font-size: 11px; text-transform: uppercase; font-weight: bold;">Talles (0 a 24 Meses)</label>
-                <button class="accordion-main-btn" onclick="toggleAcordeon('talleAccordion', this)">
-                    <span id="txtBtnTalle">Todos los talles</span>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </button>
-
-                <div id="talleAccordion" class="accordion-content collapsed">
-                    <ul class="category-list" id="talleList">
-                        <li class="active" onclick="seleccionarFiltro('talle', 'Todos', 'Todos los talles', this)">Todos los talles</li>
-                        <li onclick="seleccionarFiltro('talle', 'RN', 'Recién Nacido (RN)', this)">Recién Nacido (RN)</li>
-                        <li onclick="seleccionarFiltro('talle', '0-3M', '0 a 3 Meses', this)">0 a 3 Meses</li>
-                        <li onclick="seleccionarFiltro('talle', '3-6M', '3 a 6 Meses', this)">3 a 6 Meses</li>
-                        <li onclick="seleccionarFiltro('talle', '6-9M', '6 a 9 Meses', this)">6 a 9 Meses</li>
-                        <li onclick="seleccionarFiltro('talle', '9-12M', '9 a 12 Meses', this)">9 a 12 Meses</li>
-                        <li onclick="seleccionarFiltro('talle', '12-18M', '12 a 18 Meses', this)">12 a 18 Meses</li>
-                        <li onclick="seleccionarFiltro('talle', '18-24M', '18 a 24 Meses', this)">18 a 24 Meses</li>
-                    </ul>
-                </div>
-            </div>
-
             <div class="filter-group">
                 <label for="orderBy">Ordenar por precio</label>
                 <select id="orderBy" onchange="filtrarProductos()">
@@ -586,7 +594,7 @@
         <!-- Grilla Principal de Productos -->
         <main class="catalog-content">
             <div class="catalog-header-bar">
-                <h1>Catálogo Mayorista 0 a 24 Meses</h1>
+                <h1>Catálogo Mayorista</h1>
                 <span id="productCount" class="product-count">Cargando productos...</span>
             </div>
 
@@ -596,9 +604,26 @@
         </main>
     </div>
 
+    <!-- Modal de Detalle de Producto -->
+    <div id="productModalOverlay" class="product-modal-overlay" onclick="cerrarModalDetalleFuera(event)">
+        <div class="product-modal">
+            <button class="modal-close-btn" onclick="cerrarModalDetalle()"><i class="fa-solid fa-xmark"></i></button>
+            <div id="modalCarouselContainer" class="modal-carousel">
+                <!-- Carrusel de fotos grande -->
+            </div>
+            <div class="modal-info">
+                <h2 id="modalTitle"></h2>
+                <div id="modalTags" class="tags-container" style="justify-content: flex-start; margin-bottom: 10px;"></div>
+                <div id="modalPrice" class="modal-price"></div>
+                <div id="modalDesc" class="modal-desc"></div>
+                <button id="modalBtnAdd" class="btn-add">AGREGAR AL PEDIDO</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Widgets Flotantes (WhatsApp & ChatBot) -->
     <div class="floating-widgets">
-        <a href="https://wa.me/5491135467677?text=Hola,%20quiero%20hacer%20una%20consulta%20mayorista%20sobre%20Laleli%20Bebés" target="_blank" class="float-btn whatsapp-btn" title="Escribinos por WhatsApp">
+        <a href="https://wa.me/5491128287285?text=Hola,%20quiero%20hacer%20una%20consulta%20mayorista%20sobre%20Laleli%20Bebés" target="_blank" class="float-btn whatsapp-btn" title="Escribinos por WhatsApp">
             <i class="fa-brands fa-whatsapp"></i>
         </a>
         <div class="float-btn chatbot-btn" onclick="toggleChatbot()" title="Asistente Virtual">
@@ -613,7 +638,19 @@
             <button onclick="toggleChatbot()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="chatMessages" class="chatbot-messages">
-            <div class="chat-msg bot">¡Hola! 🌸 Soy el asistente virtual de Laleli Bebés. ¿En qué puedo ayudarte con tus compras mayoristas hoy?</div>
+            <div class="chat-msg bot">¡Hola! 🌸 Soy el asistente virtual de Laleli Bebés. ¿En qué puedo ayudarte con tus compras mayoristas hoy? Seleccioná una opción o escribinos abajo:</div>
+        </div>
+        <!-- Botones de Respuestas Rápidas -->
+        <div class="chatbot-quick-replies">
+            <button class="quick-reply-btn" onclick="enviarRespuestaRapida('¿Cuál es la compra mínima por mayor?')">Compra Mínima</button>
+            <button class="quick-reply-btn" onclick="enviarRespuestaRapida('¿Venden por menor o solo por mayor?')">¿Venden por menor?</button>
+            <button class="quick-reply-btn" onclick="enviarRespuestaRapida('¿Qué medios de pago aceptan?')">Medios de Pago</button>
+            <button class="quick-reply-btn" onclick="enviarRespuestaRapida('¿Hacen envíos al interior del país?')">Envíos al Interior</button>
+            <button class="quick-reply-btn" onclick="enviarRespuestaRapida('¿Puedo retirar mi pedido personalmente?')">Retiro Personal</button>
+            <button class="quick-reply-btn" onclick="enviarRespuestaRapida('¿Cuánto demora en despacharse un pedido?')">Demora de Despacho</button>
+            <button class="quick-reply-btn" onclick="enviarRespuestaRapida('¿Cómo veo el catálogo completo con precios?')">Catálogo y Precios</button>
+            <button class="quick-reply-btn" onclick="enviarRespuestaRapida('¿Cómo sé qué talles vienen LAS PRENDAS?')">Talles y Curva</button>
+            <button class="quick-reply-btn" onclick="enviarRespuestaRapida('¿Cómo hago para realizar un pedido?')">Cómo hacer un Pedido</button>
         </div>
         <div class="chatbot-input-area">
             <input type="text" id="chatInput" placeholder="Escribí tu consulta..." onkeypress="if(event.key === 'Enter') enviarMensajeChat()">
@@ -646,8 +683,11 @@
 
         let listaProductosGlobal = [];
         let categoriaSeleccionada = 'Todas';
-        let talleSeleccionado = 'Todos';
         let carrito = [];
+
+        window.onload = () => {
+            inicializarCatalogo();
+        };
 
         function toggleAcordeon(idContenido, btnElement) {
             const contenido = document.getElementById(idContenido);
@@ -678,12 +718,6 @@
                 document.querySelectorAll('#categoryList li').forEach(el => el.classList.remove('active'));
                 document.getElementById('catAccordion').classList.add('collapsed');
                 document.querySelector('#catAccordion').previousElementSibling.classList.add('collapsed');
-            } else if (tipo === 'talle') {
-                talleSeleccionado = valorFiltro;
-                document.getElementById('txtBtnTalle').textContent = textoBoton;
-                document.querySelectorAll('#talleList li').forEach(el => el.classList.remove('active'));
-                document.getElementById('talleAccordion').classList.add('collapsed');
-                document.querySelector('#talleAccordion').previousElementSibling.classList.add('collapsed');
             }
             elementoLi.classList.add('active');
             filtrarProductos();
@@ -700,11 +734,8 @@
 
                 const coincideTexto = nombre.includes(textoBusqueda) || descripcion.includes(textoBusqueda);
                 const coincideCategoria = categoriaSeleccionada === 'Todas' || categoria === categoriaSeleccionada;
-                const coincideTalle = talleSeleccionado === 'Todos' || 
-                                     descripcion.includes(talleSeleccionado.toLowerCase()) || 
-                                     nombre.includes(talleSeleccionado.toLowerCase());
 
-                return coincideTexto && coincideCategoria && coincideTalle;
+                return coincideTexto && coincideCategoria;
             });
 
             if (orden === 'menor') {
@@ -714,6 +745,20 @@
             }
 
             mostrarProductos(resultado);
+        }
+
+        // Función robusta para normalizar las imágenes de cualquier formato en Supabase
+        function obtenerArrayImagenes(imagen_url) {
+            if (Array.isArray(imagen_url) && imagen_url.length > 0) {
+                return imagen_url.filter(img => typeof img === 'string' && img.trim() !== '');
+            }
+            if (typeof imagen_url === 'string' && imagen_url.trim() !== '') {
+                if (imagen_url.includes(',')) {
+                    return imagen_url.split(',').map(s => s.trim()).filter(s => s !== '');
+                }
+                return [imagen_url];
+            }
+            return ['https://via.placeholder.com/400?text=Sin+Imagen'];
         }
 
         function mostrarProductos(productos) {
@@ -728,31 +773,160 @@
             }
 
             grid.innerHTML = '';
-            productos.forEach(prod => {
+            productos.forEach((prod, index) => {
                 const precioFormateado = Number(prod.precio).toLocaleString('es-AR');
+                const imagenes = obtenerArrayImagenes(prod.imagen_url);
+
+                let slidesHtml = '';
+                imagenes.forEach((imgUrl) => {
+                    slidesHtml += `
+                        <div class="carousel-slide">
+                            <img src="${imgUrl}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/200?text=Error+Imagen'" onclick="abrirDetallePorIndex(${index})">
+                        </div>
+                    `;
+                });
+
+                let botonesCarrusel = '';
+                if (imagenes.length > 1) {
+                    botonesCarrusel = `
+                        <button class="carousel-btn carousel-prev" onclick="moverSlide(event, this, -1)"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="carousel-btn carousel-next" onclick="moverSlide(event, this, 1)"><i class="fa-solid fa-chevron-right"></i></button>
+                    `;
+                }
+
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.innerHTML = `
                     <div>
-                        <img src="${prod.imagen_url || 'https://via.placeholder.com/200'}" alt="${prod.nombre}">
-                        <h3>${prod.nombre}</h3>
+                        <div class="card-carousel" data-index="0">
+                            <div class="carousel-track" style="transform: translateX(0%);">
+                                ${slidesHtml}
+                            </div>
+                            ${botonesCarrusel}
+                        </div>
+                        <h3 onclick="abrirDetallePorIndex(${index})">${prod.nombre}</h3>
                         <div class="tags-container">
                             ${prod.categoria ? `<span class="badge">${prod.categoria}</span>` : ''}
                             ${prod.descripcion ? `<span class="badge badge-talle">${prod.descripcion}</span>` : ''}
                         </div>
                         <div class="price">$ ${precioFormateado}</div>
                     </div>
-                    <button class="btn-add" onclick='agregarAlCarrito(${JSON.stringify(prod)})'>AGREGAR AL PEDIDO</button>
+                    <button class="btn-add" onclick="agregarAlCarritoPorIndex(${index})">AGREGAR AL PEDIDO</button>
                 `;
                 grid.appendChild(card);
             });
+        }
+
+        function moverSlide(event, btn, direccion) {
+            event.stopPropagation();
+            const carousel = btn.closest('.card-carousel');
+            const track = carousel.querySelector('.carousel-track');
+            const slides = track.querySelectorAll('.carousel-slide');
+            let currentIndex = parseInt(carousel.getAttribute('data-index')) || 0;
+
+            currentIndex += direccion;
+            if (currentIndex < 0) {
+                currentIndex = slides.length - 1;
+            } else if (currentIndex >= slides.length) {
+                currentIndex = 0;
+            }
+
+            carousel.setAttribute('data-index', currentIndex);
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
+        }
+
+        /* --- FUNCIONES AUXILIARES SEGURAS POR ÍNDICE --- */
+        function abrirDetallePorIndex(index) {
+            const prod = listaProductosGlobal[index];
+            if (prod) {
+                abrirModalDetalle(prod);
+            }
+        }
+
+        function agregarAlCarritoPorIndex(index) {
+            const prod = listaProductosGlobal[index];
+            if (prod) {
+                agregarAlCarrito(prod);
+            }
+        }
+
+        /* --- LÓGICA DEL MODAL DE DETALLE --- */
+        function abrirModalDetalle(prod) {
+            document.getElementById('modalTitle').textContent = prod.nombre;
+            document.getElementById('modalPrice').textContent = `$ ${Number(prod.precio).toLocaleString('es-AR')}`;
+            document.getElementById('modalDesc').textContent = prod.descripcion ? `Descripción / Curva: ${prod.descripcion}` : 'Sin descripción adicional.';
+            
+            const tagsContainer = document.getElementById('modalTags');
+            tagsContainer.innerHTML = prod.categoria ? `<span class="badge" style="font-size:12px; padding:4px 8px;">${prod.categoria}</span>` : '';
+
+            const imagenes = obtenerArrayImagenes(prod.imagen_url);
+
+            let modalSlidesHtml = '';
+            imagenes.forEach((imgUrl) => {
+                modalSlidesHtml += `
+                    <div class="carousel-slide">
+                        <img src="${imgUrl}" alt="${prod.nombre}" onerror="this.src='https://via.placeholder.com/400?text=Error+Imagen'" style="width:100%; height:100%; object-fit:cover;">
+                    </div>
+                `;
+            });
+
+            let modalBotones = '';
+            if (imagenes.length > 1) {
+                modalBotones = `
+                    <button class="carousel-btn carousel-prev" onclick="moverSlideModal(this, -1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button class="carousel-btn carousel-next" onclick="moverSlideModal(this, 1)"><i class="fa-solid fa-chevron-right"></i></button>
+                `;
+            }
+
+            document.getElementById('modalCarouselContainer').innerHTML = `
+                <div class="card-carousel" data-index="0" style="height:100%; margin-bottom:0;">
+                    <div class="carousel-track" style="transform: translateX(0%);">
+                        ${modalSlidesHtml}
+                    </div>
+                    ${modalBotones}
+                </div>
+            `;
+
+            const btnAddModal = document.getElementById('modalBtnAdd');
+            btnAddModal.onclick = () => {
+                agregarAlCarrito(prod);
+                cerrarModalDetalle();
+            };
+
+            document.getElementById('productModalOverlay').classList.add('active');
+        }
+
+        function cerrarModalDetalle() {
+            document.getElementById('productModalOverlay').classList.remove('active');
+        }
+
+        function cerrarModalDetalleFuera(event) {
+            if (event.target.id === 'productModalOverlay') {
+                cerrarModalDetalle();
+            }
+        }
+
+        function moverSlideModal(btn, direccion) {
+            const carousel = btn.closest('.card-carousel');
+            const track = carousel.querySelector('.carousel-track');
+            const slides = track.querySelectorAll('.carousel-slide');
+            let currentIndex = parseInt(carousel.getAttribute('data-index')) || 0;
+
+            currentIndex += direccion;
+            if (currentIndex < 0) {
+                currentIndex = slides.length - 1;
+            } else if (currentIndex >= slides.length) {
+                currentIndex = 0;
+            }
+
+            carousel.setAttribute('data-index', currentIndex);
+            track.style.transform = `translateX(-${currentIndex * 100}%)`;
         }
 
         /* --- LÓGICA DE CARRITO --- */
         function agregarAlCarrito(producto) {
             carrito.push(producto);
             actualizarContadorCarrito();
-            // Notificación visual rápida
             const btn = document.querySelector('.header-cart-btn');
             btn.style.transform = 'scale(1.1)';
             setTimeout(() => { btn.style.transform = 'scale(1)'; }, 200);
@@ -810,54 +984,95 @@
                 mensaje += `${i+1}. ${item.nombre} - $ ${Number(item.precio).toLocaleString('es-AR')}%0A`;
                 total += Number(item.precio);
             });
-            mensaje += `%0A*TOTAL: $ ${total.toLocaleString('es-AR')}*`;
-            window.open(`https://wa.me/5491135467677?text=${mensaje}`, '_blank');
+            mensaje += `%0A*Total estimado: $ ${total.toLocaleString('es-AR')}*`;
+            window.open(`https://wa.me/5491128287285?text=${mensaje}`, '_blank');
         }
 
-        /* --- LÓGICA DEL CHATBOT --- */
+        /* --- CHATBOT & RESPUESTAS RÁPIDAS --- */
         function toggleChatbot() {
             const modal = document.getElementById('chatbotModal');
             modal.classList.toggle('active');
         }
 
-        function enviarMensajeChat() {
-            const input = document.getElementById('chatInput');
-            const texto = input.value.trim();
-            if (!texto) return;
-
-            const contenedor = document.getElementById('chatMessages');
+        function obtenerRespuestaBot(pregunta) {
+            const p = pregunta.toLowerCase();
             
-            // Mensaje usuario
+            if (p.includes('venden por menor') || p.includes('solo por mayor') || (p.includes('por menor') && !p.includes('mayor'))) {
+                return 'En Lalelí también vendemos al por menor, podes visitar nuestra tienda minorista en lalelibebes.mitiendanube.com';
+            }
+            if (p.includes('mínima') || p.includes('compra mínima')) {
+                return '¡Hola! 👋 La compra mínima es de 6 unidades, una unidad de cada talle, colores y estampas a elección.\nUna vez que seleccionaste los productos, nos estaremos comunicando vía whatsapp para confirmar la disponibilidad de tu pedido y coordinar la entrega.';
+            }
+            if (p.includes('medio de pago') || p.includes('pago') || p.includes('transferencia') || p.includes('efectivo') || p.includes('depósito')) {
+                return 'Para compras mayoristas, aceptamos transferencia bancaria, depósito y efectivo (Retirando por nuestro punto de entrega en Mataderos, CABA).';
+            }
+            if (p.includes('interior') || p.includes('país') || p.includes('envíos')) {
+                return '¡Sí, a todo el país! 🚚 Despachamos a través de Correo Argentino, expresos o transporte a elección del cliente. Los costos de envío corren por cuenta del comprador.';
+            }
+            if (p.includes('retirar') || p.includes('personalmente')) {
+                return 'Sí, podes retirar tu pedido sin cargo por nuestro punto de entrega, en Ciudad Autónoma de Buenos Aires (Mataderos), coordinando previamente el día y horario vía whatsapp. 📍';
+            }
+            if (p.includes('demora') || p.includes('despacharse') || p.includes('demora en despacharse')) {
+                return 'Una vez realizado tu pedido, nos estaremos comunicando en las próximas 24hs para coordinar la entrega.';
+            }
+            if (p.includes('catálogo') || p.includes('precios') || p.includes('completo')) {
+                return 'Podés ver todos los artículos disponibles, fotos y precios actualizados directamente en nuestra web: LALELIMAYORISTAS 🛒✨';
+            }
+            if (p.includes('talles') || p.includes('curva') || p.includes('vienen')) {
+                return 'En la descripción de cada producto detallamos los talles, colores, y tabla de medidas.';
+            }
+            if (p.includes('pedido') || p.includes('realizar') || p.includes('hacer un pedido')) {
+                return 'Es muy fácil:\n1. Armás tu pedido desde la web o nos pasas una captura de pantalla a whatsapp.\n2. Te confirmamos el stock y total. Abonás y coordinamos el envío o retiro. ¡Listo! 🛍️';
+            }
+
+            return '¡Gracias por tu consulta! Recordá que podés armar tu pedido mayorista directamente desde la web y enviárnoslo por WhatsApp o escribirnos al 11 2828-7285.';
+        }
+
+        function enviarRespuestaRapida(textoPregunta) {
+            const chatMessages = document.getElementById('chatMessages');
+
+            // Mensaje del usuario (botón seleccionado)
             const userMsg = document.createElement('div');
             userMsg.className = 'chat-msg user';
-            userMsg.textContent = texto;
-            contenedor.appendChild(userMsg);
+            userMsg.textContent = textoPregunta;
+            chatMessages.appendChild(userMsg);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
 
-            input.value = '';
-            contenedor.scrollTop = contenedor.scrollHeight;
-
-            // Respuesta automática del bot simulada
+            // Respuesta automática del bot
             setTimeout(() => {
                 const botMsg = document.createElement('div');
                 botMsg.className = 'chat-msg bot';
-                
-                const txtLower = texto.toLowerCase();
-                if (txtLower.includes('minima') || txtLower.includes('mínima') || txtLower.includes('compra')) {
-                    botMsg.textContent = 'La compra mínima mayorista es a partir de $50.000 o surtido en prendas de 0 a 24 meses. 🌸';
-                } else if (txtLower.includes('envio') || txtLower.includes('envíos') || txtLower.includes('correo')) {
-                    botMsg.textContent = 'Hacemos envíos a todo el país a través de correo o expreso a cargo del comprador. 📦';
-                } else if (txtLower.includes('pago') || txtLower.includes('transferencia')) {
-                    botMsg.textContent = 'Aceptamos transferencias bancarias y depósitos con un descuento especial en efectivo/transferencia. 💳';
-                } else {
-                    botMsg.textContent = '¡Gracias por consultar! Podés armar tu pedido con los botones de la web y enviarlo directamente por WhatsApp para coordinar el pago. 🌸';
-                }
-
-                contenedor.appendChild(botMsg);
-                contenedor.scrollTop = contenedor.scrollHeight;
-            }, 600);
+                botMsg.style.whiteSpace = 'pre-line'; // Para respetar saltos de línea
+                botMsg.textContent = obtenerRespuestaBot(textoPregunta);
+                chatMessages.appendChild(botMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 500);
         }
 
-        inicializarCatalogo();
+        function enviarMensajeChat() {
+            const input = document.getElementById('chatInput');
+            const texto = input.value.trim();
+            if(!texto) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+            
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-msg user';
+            userMsg.textContent = texto;
+            chatMessages.appendChild(userMsg);
+
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = 'chat-msg bot';
+                botMsg.style.whiteSpace = 'pre-line';
+                botMsg.textContent = obtenerRespuestaBot(texto);
+                chatMessages.appendChild(botMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 600);
+        }
     </script>
 </body>
 </html>
