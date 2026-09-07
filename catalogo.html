@@ -699,7 +699,8 @@
             try {
                 const { data: productos, error } = await supabaseClient
                     .from('productos')
-                    .select('*');
+                    .select('*')
+                    .eq('estado', 'publicado'); // <--- Filtro agregado para mostrar solo los publicados
 
                 if (error) throw error;
 

@@ -143,18 +143,44 @@
             background-color: #F4511E;
         }
 
-        /* Sección de listado inferior */
+        /* Sección de listado inferior y cabecera de la sección */
         .products-section {
             margin-top: 40px;
+        }
+        .section-header-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
         }
         .products-section h2 {
             font-family: 'Fredoka', sans-serif;
             font-size: 18px;
             color: #333;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 8px;
+            margin: 0;
+            border: none;
+            padding: 0;
         }
+        .btn-mass-publish {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        .btn-mass-publish:hover {
+            background: #059669;
+        }
+
         .admin-product-list {
             display: flex;
             flex-direction: column;
@@ -182,9 +208,28 @@
             align-items: center;
             flex: 1;
         }
+        .badge-borrador {
+            background: #fef3c7;
+            color: #d97706;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .badge-publicado {
+            background: #d1fae5;
+            color: #059669;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
         .admin-actions {
             display: flex;
             gap: 8px;
+            align-items: center;
         }
         .btn-delete {
             background: #ff4d4d;
@@ -212,8 +257,17 @@
         .btn-edit:hover {
             background: #2563eb;
         }
+        .btn-toggle-status {
+            border: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
 
-        /* Estilos para Modales Estéticos (Alerta y Confirmación / Edición) */
+        /* Estilos para Modales Estéticos */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -341,6 +395,15 @@
                 <input type="number" id="precio" placeholder="45000" required>
             </div>
 
+            <!-- Nuevo Selector de Estado -->
+            <div class="form-group">
+                <label for="estadoProducto">Estado inicial</label>
+                <select id="estadoProducto" required>
+                    <option value="borrador">Guardar como Borrador (No se ve en la web)</option>
+                    <option value="publicado">Publicar Directamente</option>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label>Imágenes del Producto (Máximo 16 fotos)</label>
                 <div class="file-upload-box" onclick="document.getElementById('imagenesInput').click()">
@@ -351,11 +414,16 @@
                 <div id="previewGrid" class="preview-grid"></div>
             </div>
 
-            <button type="submit" id="btnSubmit" class="btn-submit">SUBIR PRODUCTO A LA WEB</button>
+            <button type="submit" id="btnSubmit" class="btn-submit">GUARDAR PRODUCTO</button>
         </form>
 
         <div class="products-section">
-            <h2>Productos Existentes en la Base</h2>
+            <div class="section-header-flex">
+                <h2>Productos Existentes en la Base</h2>
+                <button type="button" class="btn-mass-publish" onclick="publicarTodosLosBorradores()">
+                    <i class="fa-solid fa-rocket"></i> Publicar Todos los Borradores
+                </button>
+            </div>
             <div id="adminProductList" class="admin-product-list">
                 <!-- Se cargan dinámicamente -->
             </div>
@@ -383,7 +451,7 @@
         </div>
     </div>
 
-    <!-- Modal de Edición de Producto (Fotos y Descripción) -->
+    <!-- Modal de Edición de Producto -->
     <div id="editModal" class="modal-overlay">
         <div class="modal-box" style="text-align: left;">
             <h3>Editar Producto</h3>
@@ -415,6 +483,13 @@
                     <input type="number" id="editPrecio" required>
                 </div>
                 <div class="form-group">
+                    <label for="editEstado">Estado</label>
+                    <select id="editEstado" required>
+                        <option value="borrador">Borrador</option>
+                        <option value="publicado">Publicado</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Nuevas Imágenes (Opcional - Reemplazan las anteriores)</label>
                     <div class="file-upload-box" onclick="document.getElementById('editImagenesInput').click()">
                         <span class="file-upload-label"><i class="fa-solid fa-cloud-arrow-up"></i> Cambiar fotos del producto</span>
@@ -440,7 +515,6 @@
         let archivosSeleccionados = [];
         let archivosEditSeleccionados = [];
 
-        // Función personalizada para reemplazar los alert() nativos feos
         function mostrarAlerta(titulo, mensaje) {
             document.getElementById('alertTitle').textContent = titulo;
             document.getElementById('alertMessage').textContent = mensaje;
@@ -499,7 +573,6 @@
             });
         }
 
-        // Manejo de fotos en el modal de edición
         function manejarSeleccionEditImagenes(input) {
             const nuevosArchivos = Array.from(input.files);
             if (nuevosArchivos.length > 16) {
@@ -558,6 +631,15 @@
             listaDiv.innerHTML = '';
             data.forEach(prod => {
                 const primeraImagen = obtenerPrimeraUrl(prod.imagen_url);
+                const esBorrador = prod.estado === 'borrador';
+                const badgeHtml = esBorrador 
+                    ? '<span class="badge-borrador">Borrador</span>' 
+                    : '<span class="badge-publicado">Publicado</span>';
+
+                // Configuración del botón dinámico de estado (Publicar / Ocultar)
+                const textoBtnEstado = esBorrador ? 'Publicar' : 'Ocultar';
+                const colorBtnEstado = esBorrador ? '#10b981' : '#f59e0b';
+                const nuevoEstadoDestino = esBorrador ? 'publicado' : 'borrador';
 
                 const row = document.createElement('div');
                 row.className = 'admin-product-item';
@@ -565,11 +647,14 @@
                     <div class="admin-product-info">
                         <img src="${primeraImagen}" alt="${prod.nombre}">
                         <div>
-                            <strong>${prod.nombre}</strong><br>
+                            <strong>${prod.nombre}</strong> ${badgeHtml}<br>
                             <small style="color:#666;">${prod.categoria || 'Sin categoría'} | $ ${Number(prod.precio).toLocaleString('es-AR')}</small>
                         </div>
                     </div>
                     <div class="admin-actions">
+                        <button class="btn-toggle-status" style="background-color: ${colorBtnEstado};" onclick="cambiarEstadoIndividual(${prod.id}, '${nuevoEstadoDestino}')">
+                            <i class="fa-solid ${esBorrador ? 'fa-eye' : 'fa-eye-slash'}"></i> ${textoBtnEstado}
+                        </button>
                         <button class="btn-edit" onclick='abrirModalEditar(${JSON.stringify(prod)})'><i class="fa-solid fa-pen-to-square"></i> Editar</button>
                         <button class="btn-delete" onclick="eliminarProducto(${prod.id})"><i class="fa-solid fa-trash"></i> Eliminar</button>
                     </div>
@@ -618,6 +703,7 @@
                 const categoria = document.getElementById('categoria').value;
                 const descripcion = document.getElementById('descripcion').value;
                 const precio = parseFloat(document.getElementById('precio').value);
+                const estado = document.getElementById('estadoProducto').value;
 
                 const stringUrlsLimpio = urlsImagenes.join(', ');
 
@@ -628,12 +714,13 @@
                         categoria: categoria,
                         descripcion: descripcion,
                         precio: precio,
-                        imagen_url: stringUrlsLimpio
+                        imagen_url: stringUrlsLimpio,
+                        estado: estado
                     }]);
 
                 if (insertError) throw insertError;
 
-                mostrarAlerta('¡Éxito!', '¡Producto subido con éxito!');
+                mostrarAlerta('¡Éxito!', '¡Producto guardado con éxito!');
                 document.getElementById('productForm').reset();
                 archivosSeleccionados = [];
                 document.getElementById('previewGrid').innerHTML = '';
@@ -645,7 +732,41 @@
                 mostrarAlerta('Error', 'Hubo un error al subir el producto: ' + (err.message || JSON.stringify(err)));
             } finally {
                 btnSubmit.disabled = false;
-                btnSubmit.textContent = 'SUBIR PRODUCTO A LA WEB';
+                btnSubmit.textContent = 'GUARDAR PRODUCTO';
+            }
+        }
+
+        // Función para cambiar el estado de un producto individualmente (Publicar / Ocultar)
+        async function cambiarEstadoIndividual(id, nuevoEstado) {
+            try {
+                const { error } = await supabaseClient
+                    .from('productos')
+                    .update({ estado: nuevoEstado })
+                    .eq('id', id);
+
+                if (error) throw error;
+                cargarProductosAdmin();
+            } catch (err) {
+                console.error('Error al cambiar estado:', err);
+                mostrarAlerta('Error', 'No se pudo actualizar el estado del producto.');
+            }
+        }
+
+        // Función para publicar masivamente todos los borradores
+        async function publicarTodosLosBorradores() {
+            try {
+                const { error } = await supabaseClient
+                    .from('productos')
+                    .update({ estado: 'publicado' })
+                    .eq('estado', 'borrador');
+
+                if (error) throw error;
+
+                mostrarAlerta('¡Listo!', '¡Todos los borradores pasaron a estar publicados en la web!');
+                cargarProductosAdmin();
+            } catch (err) {
+                console.error('Error al publicar masivamente:', err);
+                mostrarAlerta('Error', 'No se pudieron publicar los borradores.');
             }
         }
 
@@ -684,6 +805,7 @@
             document.getElementById('editCategoria').value = prod.categoria || '';
             document.getElementById('editDescripcion').value = prod.descripcion || '';
             document.getElementById('editPrecio').value = prod.precio || '';
+            document.getElementById('editEstado').value = prod.estado || 'publicado';
             
             archivosEditSeleccionados = [];
             document.getElementById('editPreviewGrid').innerHTML = '';
@@ -703,6 +825,7 @@
             const categoria = document.getElementById('editCategoria').value;
             const descripcion = document.getElementById('editDescripcion').value;
             const precio = parseFloat(document.getElementById('editPrecio').value);
+            const estado = document.getElementById('editEstado').value;
 
             const btnSaveEdit = document.getElementById('btnSaveEdit');
             btnSaveEdit.disabled = true;
@@ -713,10 +836,10 @@
                     nombre: nombre,
                     categoria: categoria,
                     descripcion: descripcion,
-                    precio: precio
+                    precio: precio,
+                    estado: estado
                 };
 
-                // Si seleccionó nuevas fotos, las subimos y actualizamos el campo de imágenes
                 if (archivosEditSeleccionados.length > 0) {
                     let urlsImagenes = [];
                     for (let i = 0; i < archivosEditSeleccionados.length; i++) {
